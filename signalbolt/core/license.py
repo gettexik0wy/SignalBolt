@@ -1,0 +1,5 @@
+"""
+License validation.
+"""
+
+# TODO: Implement

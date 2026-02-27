@@ -1,0 +1,104 @@
+# =============================================================================
+# PAPER TRADING - SAFE CONFIGURATION
+# =============================================================================
+#
+# Conservative settings for paper trading simulation.
+# Inherits global settings from configs/config.yaml
+#
+# =============================================================================
+
+# =============================================================================
+# SPOT TRADING PARAMETERS
+# =============================================================================
+
+spot:
+  wallet_pct: 50.0             # % of wallet to use per trade (50% = conservative)
+  max_positions: 1             # Maximum concurrent positions
+  
+  # Risk management
+  hard_sl_pct: -2.0            # Hard stop loss % (negative)
+  be_activation_pct: 0.5       # Breakeven activation % (0.5% profit)
+  trail_distance_pct: 0.4      # Trailing stop distance % (0.4% from peak)
+  timeout_minutes: 60          # Position timeout in minutes
+  
+  # Exit behavior
+  min_profit_to_close_pct: 0.15  # Minimum profit % to close on timeout
+
+
+# =============================================================================
+# SIGNAL SCANNER
+# =============================================================================
+
+scanner:
+  min_signal_score: 70.0       # Minimum signal score (0-100+)
+  scan_interval_sec: 45        # Seconds between scans
+  signal_cooldown_min: 30      # Minutes before re-scanning same symbol
+
+
+# =============================================================================
+# COIN DISCOVERY
+# =============================================================================
+
+discovery:
+  mode: volume                 # Discovery mode: volume / momentum / volatility / manual
+  top_coins: 30                # Number of coins to monitor
+  
+  # Filters
+  min_volume_24h: 5000000      # Minimum 24h volume in USD ($5M)
+  max_spread_pct: 0.3          # Maximum spread % (0.3%)
+  min_price: 0.0001            # Minimum price (avoid dust)
+  
+  # Blacklist (symbols to never trade)
+  blacklist:
+    - "USDCUSDT"
+    - "BUSDUSDT"
+    - "TUSDUSDT"
+    - "USDPUSDT"
+    - "PAXUSDT"
+  
+  # Whitelist (if not empty, only trade these)
+  whitelist: []
+
+
+# =============================================================================
+# STRATEGY
+# =============================================================================
+
+strategy:
+  name: SignalBoltOriginal     # Strategy to use
+  timeframe: 5m                # Primary timeframe (1m, 3m, 5m, 15m, 1h, 4h, 1d)
+  
+  # Multi-timeframe (MTF) settings
+  mtf_enabled: false           # Enable multi-timeframe confirmation
+  mtf_timeframes: ['5m', '15m', '1h']  # Timeframes for MTF analysis
+  mtf_alignment_threshold: 0.6  # Required alignment ratio (60% of timeframes must agree)
+
+
+# =============================================================================
+# BACKTEST SETTINGS (Paper-specific overrides)
+# =============================================================================
+
+backtest:
+  # Override global backtest settings for this config
+  indicator_snapshots:
+    enabled: true              # Enable snapshots for this strategy
+    include_mtf: false         # Disable MTF snapshots (use only if mtf_enabled=true above)
+    mtf_timeframes: ['5m', '15m', '1h']
+
+
+# =============================================================================
+# REGIME OVERRIDES (Optional - override global regime settings)
+# =============================================================================
+
+# You can override regime parameters per trading mode
+# Example:
+# regime_overrides:
+#   bull:
+#     min_signal_score: 55.0
+#     wallet_pct: 70.0
+#   bear:
+#     min_signal_score: 75.0
+#     wallet_pct: 30.0
+#   crash:
+#     min_signal_score: 85.0
+#     wallet_pct: 10.0

@@ -1,0 +1,17 @@
+# Include important files in distribution
+include README.md
+include LICENSE
+include CHANGELOG.md
+include DISCLAIMER.md
+include requirements.txt
+include requirements-dev.txt
+include requirements-dashboard.txt
+include .env.example
+
+# Include configs
+recursive-include signalbolt/configs *.yaml
+
+# Exclude dev files
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .DS_Store

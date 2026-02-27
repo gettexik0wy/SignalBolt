@@ -1,0 +1,5 @@
+"""
+WebSocket handler.
+"""
+
+# TODO: Implement

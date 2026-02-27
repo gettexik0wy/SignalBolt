@@ -1,0 +1,684 @@
+# =============================================================================
+# SIGNALBOLT - CONFIGURATION TEMPLATE
+# =============================================================================
+#
+# Complete configuration template with all available options.
+#
+# How to use:
+#   1. Copy this file to configs/paper/my_config.yaml (or live/)
+#   2. Modify values as needed
+#   3. Select your config when starting SignalBolt
+#
+# WARNING: 
+#   - Test new configurations in paper trading first!
+#   - Extreme values may result in unexpected behavior
+#   - Read the documentation for recommended ranges
+#
+# =============================================================================
+
+# Config metadata
+name: "My Custom Config"
+description: "Full configuration template with all options"
+version: "1.0.0"
+risk_level: "MEDIUM"  # LOW / MEDIUM / HIGH
+author: "gettexik"
+created: "2026-02-28"
+
+# =============================================================================
+# EXCHANGE
+# =============================================================================
+
+exchange:
+  name: "binance"                # binance / bybit / kucoin (future)
+  testnet: false                 # Use testnet API
+  timeout_ms: 15000              # API timeout in milliseconds
+  retry_count: 3                 # Number of retries on failure
+  retry_delay_ms: 1000           # Delay between retries
+  
+  # Fees
+  taker_fee_pct: 0.1             # Taker fee percentage
+  maker_fee_pct: 0.0             # Maker fee percentage (0 for BNB discount)
+  
+  # Rate limits
+  rate_limit_per_min: 1200       # API calls per minute
+  weight_limit_per_min: 6000     # API weight per minute
+  
+  # Connection
+  recv_window: 5000              # Receive window for signed requests
+  sync_time: true                # Sync time with exchange
+
+# =============================================================================
+# STRATEGY
+# =============================================================================
+
+strategy:
+  name: "SignalBoltOriginal"     # Strategy name
+  
+  # -------------------------------------------------------------------------
+  # TIMEFRAME SETTINGS
+  # -------------------------------------------------------------------------
+  # Valid timeframes: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
+  
+  timeframe: "5m"                # Primary analysis timeframe
+  
+  # Multi-TimeFrame (MTF) Settings
+  mtf_enabled: false             # Enable multi-timeframe analysis
+  mtf_timeframes:                # Timeframes to analyze (auto-sorted)
+    - "5m"
+    - "15m" 
+    - "1h"
+  mtf_alignment_threshold: 0.6   # Min alignment ratio (0.5=majority, 1.0=all)
+  mtf_require_all: false         # Require all timeframes to align
+  
+  # -------------------------------------------------------------------------
+  # INDICATOR THRESHOLDS
+  # -------------------------------------------------------------------------
+  
+  # ADX (Average Directional Index) - Trend strength
+  min_adx: 25.0                  # Minimum ADX for trend confirmation (15-35)
+  strong_adx: 40.0               # ADX threshold for strong trend
+  
+  # RSI (Relative Strength Index) - Momentum
+  rsi_min: 40.0                  # RSI floor for LONG signals (30-45)
+  rsi_max: 70.0                  # RSI ceiling for LONG signals (65-80)
+  rsi_oversold: 30.0             # RSI oversold level
+  rsi_overbought: 70.0           # RSI overbought level
+  
+  # Volume
+  volume_multiplier: 1.2         # Min volume vs 20-period average (1.0-2.0)
+  volume_spike: 2.0              # Volume spike multiplier
+  
+  # MACD
+  macd_threshold: 0.0            # MACD histogram threshold
+  
+  # Bollinger Bands
+  bb_squeeze_threshold: 0.02     # BB squeeze detection (bandwidth %)
+  
+  # ATR
+  atr_period: 14                 # ATR calculation period
+  atr_multiplier_sl: 1.5         # ATR multiplier for stop loss
+  atr_multiplier_tp: 2.5         # ATR multiplier for take profit
+
+# =============================================================================
+# SIGNAL GENERATOR
+# =============================================================================
+
+generator:
+  # Data requirements
+  min_candles: 100               # Minimum candles required
+  extra_candle_buffer: 50        # Extra candles to fetch
+  
+  # Per-timeframe minimum candles (overrides min_candles)
+  min_candles_per_tf:
+    "1m": 200
+    "3m": 150
+    "5m": 100
+    "15m": 100
+    "30m": 100
+    "1h": 100
+    "4h": 100
+    "1d": 60
+    "1w": 30
+  
+  # Signal generation
+  score_method: "weighted"       # weighted / simple / ml (future)
+
+# =============================================================================
+# SIGNAL SCANNER
+# =============================================================================
+
+scanner:
+  # Scanning behavior
+  scan_interval_sec: 45          # How often to scan (10-300)
+  max_coins_per_scan: 15         # Limit coins per scan cycle (5-50)
+  
+  # Signal thresholds
+  min_signal_score: 65           # Minimum signal quality (30-95)
+  signal_cooldown_min: 30        # Wait after signal before next (5-120)
+  
+  # Timeframe for scanning (uses strategy.timeframe if not set)
+  # scan_timeframe: "5m"
+  
+  # MTF scanning
+  use_mtf_scanning: false        # Use MTF for scanning
+  
+  # Batch processing
+  parallel_generation: false     # Generate signals in parallel (future)
+  batch_size: 10                 # Symbols per batch
+
+# =============================================================================
+# SIGNAL SCORING
+# =============================================================================
+
+scoring:
+  # Score weights (must sum to ~100)
+  weights:
+    trend: 25                    # ADX + DI alignment
+    momentum: 20                 # RSI + MACD
+    volume: 15                   # Volume confirmation
+    structure: 15                # Price structure
+    volatility: 10               # ATR conditions
+    alignment: 15                # Multi-indicator alignment
+  
+  # Bonuses
+  bonus_strong_trend: 10         # Bonus for ADX > strong_adx
+  bonus_volume_spike: 8          # Bonus for volume > spike level
+  bonus_macd_cross: 5            # Bonus for recent MACD cross
+  bonus_bb_breakout: 7           # Bonus for BB breakout
+  
+  # Penalties
+  penalty_overbought: -15        # Penalty for RSI overbought
+  penalty_oversold: -10          # Penalty for RSI oversold (shorts)
+  penalty_low_volume: -10        # Penalty for below avg volume
+  penalty_wide_spread: -8        # Penalty for wide spread
+  
+  # Quality tiers (score thresholds)
+  tier_A: 85                     # Excellent signal
+  tier_B: 70                     # Good signal
+  tier_C: 55                     # Acceptable signal
+  tier_D: 40                     # Weak signal
+
+# =============================================================================
+# SPOT TRADING
+# =============================================================================
+
+spot:
+  enabled: true
+  
+  # -------------------------------------------------------------------------
+  # POSITION SIZING
+  # -------------------------------------------------------------------------
+  
+  wallet_pct: 70                 # % of balance per trade (5-100)
+  max_positions: 1               # Max simultaneous positions (1-10)
+  min_trade_usd: 10              # Minimum trade size in USD
+  max_trade_usd: 10000           # Maximum trade size in USD (0=unlimited)
+  
+  # Kelly Criterion (optional)
+  use_kelly: false               # Use Kelly Criterion for sizing
+  kelly_fraction: 0.25           # Kelly fraction (conservative)
+  
+  # -------------------------------------------------------------------------
+  # STOP LOSS
+  # -------------------------------------------------------------------------
+  
+  hard_sl_pct: -2.5              # Stop loss % (negative, e.g., -2.0)
+  
+  # ATR-based stop loss (overrides hard_sl_pct if enabled)
+  use_atr_sl: false
+  atr_sl_multiplier: 1.5         # Stop = entry - (ATR * multiplier)
+  
+  # -------------------------------------------------------------------------
+  # BREAK-EVEN
+  # -------------------------------------------------------------------------
+  
+  be_enabled: true               # Enable break-even
+  be_activation_pct: 0.5         # Profit % to activate BE
+  be_offset_pct: 0.05            # Offset above entry for BE stop
+  
+  # -------------------------------------------------------------------------
+  # TRAILING STOP
+  # -------------------------------------------------------------------------
+  
+  trail_enabled: true            # Enable trailing stop
+  trail_activation_pct: 0.8      # Profit % to activate trailing
+  trail_distance_pct: 0.4        # Trailing distance %
+  
+  # ATR-based trailing (overrides fixed %)
+  use_atr_trail: false
+  atr_trail_multiplier: 1.0
+  
+  # -------------------------------------------------------------------------
+  # TAKE PROFIT
+  # -------------------------------------------------------------------------
+  
+  tp_enabled: false              # Enable fixed take profit
+  tp_pct: 3.0                    # Take profit %
+  
+  # Partial take profits
+  partial_tp_enabled: false
+  partial_tp_levels:             # Profit levels for partial exits
+    - pct: 1.0                   # At 1% profit
+      close_pct: 30              # Close 30% of position
+    - pct: 2.0                   # At 2% profit
+      close_pct: 30              # Close another 30%
+    - pct: 3.0                   # At 3% profit
+      close_pct: 40              # Close remaining 40%
+  
+  # -------------------------------------------------------------------------
+  # TIMEOUT / EMERGENCY EXIT
+  # -------------------------------------------------------------------------
+  
+  timeout_minutes: 60            # Close position after X minutes
+  min_profit_to_close_pct: 0.15  # Min profit to close on timeout
+  
+  # Emergency exit on adverse conditions
+  emergency_exit_enabled: true
+  emergency_exit_conditions:
+    max_drawdown_pct: -5.0       # Exit if DD exceeds this
+    volatility_spike: 3.0        # Exit if volatility spikes
+  
+  # -------------------------------------------------------------------------
+  # ORDER TYPES
+  # -------------------------------------------------------------------------
+  
+  entry_order_type: "MARKET"     # MARKET / LIMIT
+  exit_order_type: "MARKET"      # MARKET / LIMIT
+  
+  # Limit order settings
+  limit_offset_pct: 0.05         # Offset for limit orders
+  limit_timeout_sec: 30          # Cancel limit after X seconds
+  
+  # -------------------------------------------------------------------------
+  # SLIPPAGE
+  # -------------------------------------------------------------------------
+  
+  max_slippage_pct: 0.2          # Max acceptable slippage
+  slippage_protection: true      # Enable slippage protection
+
+# =============================================================================
+# COIN DISCOVERY
+# =============================================================================
+
+discovery:
+  # Basic settings
+  top_coins: 30                  # How many top coins by volume (5-100)
+  refresh_hours: 4               # How often to refresh list (1-24)
+  
+  # Volume filter
+  min_volume_24h: 5000000        # Minimum 24h volume USD
+  max_volume_24h: 0              # Maximum 24h volume (0=unlimited)
+  
+  # Spread filter
+  max_spread_pct: 0.3            # Maximum bid-ask spread %
+  
+  # Price change filter
+  min_change_24h_pct: 0.0        # Minimum 24h change %
+  max_change_24h_pct: 50.0       # Maximum 24h change % (avoid pumps)
+  
+  # Discovery modes
+  default_mode: "volume"         # volume / momentum / volatility / mixed
+  
+  # Momentum mode settings
+  momentum_min_change: 2.0       # Min positive change for momentum mode
+  
+  # Quote asset
+  quote_asset: "USDT"            # Quote currency (USDT/BUSD/BTC)
+  
+  # Exclude stablecoins
+  exclude_stables: true
+  stablecoins:
+    - "USDT"
+    - "USDC"
+    - "BUSD"
+    - "DAI"
+    - "TUSD"
+    - "FDUSD"
+    - "USDD"
+
+# =============================================================================
+# FILTERS
+# =============================================================================
+
+filters:
+  # Blacklist (never trade these)
+  blacklist:
+    - "LUNAUSDT"
+    - "USTCUSDT"
+    # Add more as needed
+  
+  # Whitelist (only trade these if set)
+  whitelist: []                  # Empty = use discovery
+  # whitelist:
+  #   - "BTCUSDT"
+  #   - "ETHUSDT"
+  #   - "SOLUSDT"
+  
+  # Trading hours (UTC)
+  trading_hours_enabled: false
+  trading_start_hour: 8          # Start trading at 08:00 UTC
+  trading_end_hour: 22           # Stop trading at 22:00 UTC
+  
+  # Weekend trading
+  trade_weekends: true           # Trade on weekends
+  
+  # News filter (future)
+  news_filter_enabled: false
+  avoid_high_impact_news: true
+  news_buffer_minutes: 30        # Avoid trading X min before/after news
+  
+  # Correlation filter
+  correlation_filter: false
+  max_correlation: 0.8           # Max correlation between positions
+
+# =============================================================================
+# VALIDATOR (Pre-trade checks)
+# =============================================================================
+
+validator:
+  # Signal freshness
+  max_signal_age_sec: 30         # Reject signals older than X seconds
+  
+  # Balance
+  min_balance_usd: 10            # Minimum balance to trade
+  
+  # Position limits
+  max_positions: 1               # Max simultaneous positions
+  max_same_symbol: 1             # Max positions per symbol
+  
+  # Spread
+  max_spread_pct: 0.5            # Max spread for entry
+  warn_spread_pct: 0.3           # Warn if spread above this
+  
+  # Liquidity
+  min_liquidity_tier: "low"      # very_low / low / medium / high
+  
+  # Volatility
+  max_atr_pct: 10.0              # Reject if ATR% too high
+  warn_atr_pct: 5.0              # Warn if ATR% above this
+  
+  # Price deviation
+  max_price_deviation_pct: 2.0   # Max deviation from signal price
+
+# =============================================================================
+# RISK MANAGEMENT
+# =============================================================================
+
+risk:
+  # Per-trade risk
+  risk_pct_per_trade: 2.0        # Max risk per trade (% of balance)
+  max_loss_per_trade_usd: 100    # Max loss per trade in USD (0=unlimited)
+  
+  # Daily limits
+  max_daily_loss_pct: 5.0        # Stop trading if daily loss exceeds
+  max_daily_trades: 10           # Max trades per day
+  
+  # Drawdown limits
+  max_drawdown_pct: 15.0         # Stop trading if drawdown exceeds
+  drawdown_cooldown_hours: 24    # Cooldown after max drawdown hit
+  
+  # Win rate protection
+  min_trades_for_stats: 10       # Min trades before applying win rate filter
+  min_win_rate_pct: 35.0         # Pause if win rate falls below
+  
+  # Consecutive loss limit
+  max_consecutive_losses: 5      # Pause after X consecutive losses
+  consecutive_loss_cooldown_min: 60
+  
+  # Recovery mode
+  recovery_mode_enabled: true
+  recovery_size_reduction_pct: 50  # Reduce size by X% in recovery
+  recovery_exit_threshold_pct: 80  # Exit recovery at X% of target
+
+# =============================================================================
+# REGIME DETECTION
+# =============================================================================
+
+regime:
+  enabled: true                  # Enable regime detection
+  
+  # Lookback period
+  lookback_days: 45              # Days to analyze for regime
+  
+  # Thresholds (BTC change %)
+  bull_threshold_pct: 25.0       # Bull if BTC up more than X%
+  bear_threshold_pct: -15.0      # Bear if BTC down more than X%
+  crash_threshold_pct: -25.0     # Crash if BTC down more than X%
+  
+  # Volatility thresholds
+  high_volatility_atr_pct: 5.0   # High volatility if ATR > X%
+  
+  # Update frequency
+  update_interval_hours: 4       # How often to recalculate regime
+  
+  # Reference symbol
+  reference_symbol: "BTCUSDT"    # Symbol for regime detection
+
+# =============================================================================
+# REGIME OVERRIDES
+# =============================================================================
+# Override default settings based on detected market regime
+
+regime_overrides:
+  bull:
+    # More aggressive in bull market
+    wallet_pct: 85
+    max_positions: 2
+    min_signal_score: 55
+    hard_sl_pct: -3.0
+    timeout_minutes: 120
+    min_volume_24h: 3000000
+  
+  bear:
+    # More defensive in bear market
+    wallet_pct: 50
+    max_positions: 1
+    min_signal_score: 75
+    hard_sl_pct: -1.8
+    timeout_minutes: 45
+    min_volume_24h: 10000000
+  
+  crash:
+    # Very defensive in crash
+    wallet_pct: 30
+    max_positions: 1
+    min_signal_score: 85
+    hard_sl_pct: -1.5
+    timeout_minutes: 30
+    min_volume_24h: 20000000
+    # Can disable trading entirely
+    # enabled: false
+  
+  range:
+    # Default settings (no override)
+    {}
+  
+  high_volatility:
+    # High volatility adjustments
+    wallet_pct: 60
+    hard_sl_pct: -2.0
+    trail_distance_pct: 0.6
+
+# =============================================================================
+# DATA MANAGEMENT
+# =============================================================================
+
+data:
+  # Cache settings
+  cache_enabled: true
+  cache_ttl_sec: 300             # Cache TTL in seconds
+  cache_max_size_mb: 100         # Max cache size
+  
+  # Price feed
+  price_feed_interval_ms: 1000   # Price update interval
+  use_websocket: true            # Use WebSocket for real-time data
+  
+  # Candle storage
+  store_candles: false           # Store candles locally
+  candle_storage_days: 30        # Days of candles to store
+  
+  # Trade history
+  store_trades: true             # Store trade history
+  trade_storage_days: 365        # Days of trades to store
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+
+logs:
+  # Log level
+  level: "standard"              # minimal / standard / verbose / debug
+  
+  # File logging
+  log_to_file: true
+  log_dir: "logs"
+  log_rotation: "daily"          # daily / size / none
+  log_retention_days: 30
+  
+  # What to log
+  save_trades: true              # Save all trades to file
+  save_signals: false            # Save all signals to file
+  save_rejected: false           # Save rejected signals
+  
+  # Performance logging
+  log_performance: true          # Log execution times
+  log_api_calls: false           # Log all API calls (verbose)
+  
+  # Console output
+  console_colors: true           # Use colors in console
+  show_progress: true            # Show progress bars
+
+# =============================================================================
+# ALERTS & NOTIFICATIONS
+# =============================================================================
+
+alerts:
+  # Telegram
+  telegram_enabled: false
+  telegram_bot_token: ""
+  telegram_chat_id: ""
+  telegram_alerts:
+    - "trade_open"
+    - "trade_close"
+    - "daily_summary"
+    - "error"
+  
+  # Discord
+  discord_enabled: false
+  discord_webhook_url: ""
+  discord_alerts:
+    - "trade_open"
+    - "trade_close"
+    - "error"
+  
+  # Email (future)
+  email_enabled: false
+  email_smtp_server: ""
+  email_from: ""
+  email_to: ""
+  
+  # Alert throttling
+  min_alert_interval_sec: 60     # Min seconds between same alert type
+  max_alerts_per_hour: 30        # Max alerts per hour
+
+# =============================================================================
+# PAPER TRADING
+# =============================================================================
+
+paper:
+  enabled: false                 # Enable paper trading mode
+  
+  # Initial balance
+  initial_balance_usd: 1000
+  
+  # Simulation settings
+  simulate_slippage: true
+  slippage_range_pct: 0.05       # Random slippage 0-0.05%
+  
+  simulate_latency: true
+  latency_range_ms: [50, 200]    # Random latency range
+  
+  simulate_partial_fills: false
+  
+  # Save paper trades
+  save_paper_trades: true
+  paper_trades_file: "paper_trades.json"
+
+# =============================================================================
+# BACKTESTING
+# =============================================================================
+
+backtest:
+  # Data source
+  data_source: "exchange"        # exchange / csv / database
+  data_dir: "data/historical"
+  
+  # Date range
+  start_date: "2024-01-01"
+  end_date: "2024-12-31"
+  
+  # Initial capital
+  initial_capital: 10000
+  
+  # Fees
+  commission_pct: 0.1
+  slippage_pct: 0.05
+  
+  # Reporting
+  generate_report: true
+  report_format: "html"          # html / json / csv
+  save_trades: true
+  
+  # Optimization (future)
+  optimize: false
+  optimize_metric: "sharpe"      # sharpe / returns / win_rate
+
+# =============================================================================
+# API & INTEGRATIONS
+# =============================================================================
+
+api:
+  # REST API (future)
+  rest_enabled: false
+  rest_port: 8080
+  rest_auth: true
+  
+  # WebSocket API (future)
+  ws_enabled: false
+  ws_port: 8081
+
+# =============================================================================
+# ADVANCED SETTINGS
+# =============================================================================
+
+advanced:
+  # Threading
+  use_threading: true
+  max_threads: 4
+  
+  # Memory management
+  gc_interval_sec: 300           # Garbage collection interval
+  
+  # Debug mode
+  debug_mode: false
+  save_debug_data: false
+  
+  # Experimental features
+  experimental:
+    ml_signals: false            # ML-based signal generation
+    sentiment_analysis: false    # News sentiment integration
+    orderbook_analysis: false    # Order book imbalance
+
+# =============================================================================
+# RECOMMENDED VALUE RANGES
+# =============================================================================
+#
+# | Setting              | Conservative | Balanced  | Aggressive |
+# |----------------------|--------------|-----------|------------|
+# | wallet_pct           | 30-50        | 60-75     | 80-95      |
+# | max_positions        | 1            | 1-2       | 2-3        |
+# | hard_sl_pct          | -1.5 to -2   | -2 to -2.5| -2.5 to -4 |
+# | min_signal_score     | 75-85        | 60-75     | 50-65      |
+# | timeout_minutes      | 30-45        | 45-90     | 90-180     |
+# | min_adx              | 30-35        | 25-30     | 20-25      |
+# | volume_multiplier    | 1.5-2.0      | 1.2-1.5   | 1.0-1.2    |
+# | risk_pct_per_trade   | 1-2          | 2-3       | 3-5        |
+# | max_daily_loss_pct   | 3-5          | 5-8       | 8-12       |
+#
+# =============================================================================
+
+# =============================================================================
+# TIMEFRAME RECOMMENDATIONS
+# =============================================================================
+#
+# | Timeframe | Style       | Min Candles | Typical Trades/Day |
+# |-----------|-------------|-------------|---------------------|
+# | 1m        | Scalping    | 200         | 20-50               |
+# | 5m        | Scalping    | 100         | 10-20               |
+# | 15m       | Day Trading | 100         | 5-15                |
+# | 1h        | Day Trading | 100         | 2-5                 |
+# | 4h        | Swing       | 100         | 0-2                 |
+# | 1d        | Swing       | 60          | 0-1                 |
+# | 1w        | Position    | 30          | 0-1/week            |
+#
+# =============================================================================

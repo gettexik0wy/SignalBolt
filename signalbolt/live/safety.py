@@ -1,0 +1,5 @@
+"""
+Safety mechanisms.
+"""
+
+# TODO: Implement

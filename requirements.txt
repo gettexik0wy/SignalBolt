@@ -1,0 +1,59 @@
+# ==========================================
+# SignalBolt v1.0.0 - Core Requirements
+# ==========================================
+# Install with: pip install -r requirements.txt
+
+# ==========================================
+# CORE DEPENDENCIES (Always Required)
+# ==========================================
+
+# Trading & Exchange Integration
+ccxt>=4.2.0
+
+# Data Processing
+pandas>=2.2.0
+numpy>=1.26.0
+pandas-ta>=0.3.14b
+
+# Data Storage (Parquet files with Snappy compression)
+pyarrow>=15.0.0
+
+# Configuration & Environment
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Network & HTTP Requests
+requests>=2.31.0
+
+# CLI Interface & Colors
+colorama>=0.4.6
+
+# Charting & HTML Reports (Backtesting)
+plotly>=5.18.0
+jinja2>=3.1.3
+
+# Utilities
+tqdm>=4.66.0
+python-dateutil>=2.8.2
+
+# ==========================================
+# OPTIONAL DEPENDENCIES
+# ==========================================
+# Install specific feature sets:
+#   pip install -r requirements.txt -r requirements-dev.txt
+#   pip install -r requirements.txt -r requirements-dashboard.txt
+
+# For development tools:
+# black>=23.12.0
+# pytest>=7.4.0
+# mypy>=1.7.0
+
+# For web dashboard (future):
+# Flask>=3.0.0
+# Flask-SocketIO>=5.3.0
+
+# For advanced features (future):
+# python-json-logger>=2.0.7
+# pydantic>=2.5.0
+# celery>=5.3.4
+# redis>=5.0.1
